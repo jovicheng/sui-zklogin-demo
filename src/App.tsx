@@ -492,7 +492,9 @@ const randomness = generateRandomness();`}
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Button
                   variant="contained"
-                  disabled={!ephemeralKeyPair}
+                  disabled={
+                    !ephemeralKeyPair || maxEpoch === undefined || !randomness
+                  }
                   onClick={() => {
                     if (!ephemeralKeyPair) {
                       return;
@@ -982,7 +984,12 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
                       fontWeight: 600,
                     }}
                   >
-                    {executeDigest}
+                    <a
+                      href={`https://suiexplorer.com/txblock/${executeDigest}?network=devnet`}
+                      target="_blank"
+                    >
+                      {executeDigest}
+                    </a>
                   </Typography>
                 </Alert>
               )}
