@@ -3,6 +3,7 @@ import { createTheme } from "@mui/material";
 import { SuiClientProvider, createNetworkConfig } from "@mysten/dapp-kit";
 import { getFullnodeUrl } from "@mysten/sui.js/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Analytics } from "@vercel/analytics/react";
 import i18n from "i18next";
 import ReactDOM from "react-dom/client";
 import { initReactI18next } from "react-i18next";
@@ -42,6 +43,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Routes>
             <Route path="/" element={<App />}></Route>
           </Routes>
+          <Analytics />
         </SuiClientProvider>
       </QueryClientProvider>
     </ThemeProvider>
