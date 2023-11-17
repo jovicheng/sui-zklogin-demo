@@ -192,7 +192,7 @@ function App() {
             fontWeight: 600,
             display: "flex",
             alignItems: "center",
-            columnGap: "12px",
+            columnGap: "16px",
           }}
         >
           Sui zkLogin Demo{" "}
@@ -202,21 +202,21 @@ function App() {
           >
             <Button
               size="small"
-              variant={lang === "zh" ? "contained" : "outlined"}
-              onClick={() => {
-                setLang("zh");
-              }}
-            >
-              中文
-            </Button>
-            <Button
-              size="small"
               variant={lang === "en" ? "contained" : "outlined"}
               onClick={() => {
                 setLang("en");
               }}
             >
               ENG
+            </Button>
+            <Button
+              size="small"
+              variant={lang === "zh" ? "contained" : "outlined"}
+              onClick={() => {
+                setLang("zh");
+              }}
+            >
+              中文
             </Button>
           </ButtonGroup>
         </Typography>
