@@ -136,6 +136,8 @@ function App() {
     switch (activeStep) {
       case 0:
         return !ephemeralKeyPair;
+      case 2:
+        return !jwtString;
       case 3:
         return !userSalt;
       case 4:
@@ -144,11 +146,17 @@ function App() {
         return !zkProof;
       case 6:
         return true;
-        break;
       default:
         break;
     }
-  }, [activeStep, ephemeralKeyPair, zkLoginUserAddress, zkProof, userSalt]);
+  }, [
+    activeStep,
+    jwtString,
+    ephemeralKeyPair,
+    zkLoginUserAddress,
+    zkProof,
+    userSalt,
+  ]);
 
   const [fetchingZKProof, setFetchingZKProof] = useState(false);
 
