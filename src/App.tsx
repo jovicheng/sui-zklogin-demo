@@ -15,7 +15,6 @@ import { useSuiClientQuery } from "@mysten/dapp-kit";
 import { SuiClient } from "@mysten/sui.js/client";
 import { SerializedSignature } from "@mysten/sui.js/cryptography";
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-import { enqueueSnackbar } from "notistack";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { MIST_PER_SUI } from "@mysten/sui.js/utils";
 import {
@@ -29,8 +28,10 @@ import {
 import axios from "axios";
 import { BigNumber } from "bignumber.js";
 import { JwtPayload, jwtDecode } from "jwt-decode";
+import { enqueueSnackbar } from "notistack";
 import queryString from "query-string";
 import { useEffect, useMemo, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -48,10 +49,10 @@ import {
   MAX_EPOCH_LOCAL_STORAGE_KEY,
   RANDOMNESS_SESSION_STORAGE_KEY,
   REDIRECT_URI,
-  STEPS,
+  STEPS_LABELS_TRANS_KEY,
+  SUI_PROVER_DEV_ENDPOINT,
   USER_SALT_LOCAL_STORAGE_KEY,
 } from "./constant";
-import { Trans, useTranslation } from "react-i18next";
 
 export type PartialZkLoginSignature = Omit<
   Parameters<typeof getZkLoginSignature>["0"]["inputs"],
@@ -64,32 +65,37 @@ function App() {
   const { t, i18n } = useTranslation();
 
   const [currentEpoch, setCurrentEpoch] = useState("");
-
   const [nonce, setNonce] = useState("");
-
   const [oauthParams, setOauthParams] =
     useState<queryString.ParsedQuery<string>>();
   const location = useLocation();
-
   const [zkLoginUserAddress, setZkLoginUserAddress] = useState("");
-
   const [decodedJwt, setDecodedJwt] = useState<JwtPayload>();
   const [jwtString, setJwtString] = useState("");
-
   const [ephemeralKeyPair, setEphemeralKeyPair] = useState<Ed25519Keypair>();
-
   const [userSalt, setUserSalt] = useState<string>();
-
   const [zkProof, setZkProof] = useState<PartialZkLoginSignature>();
-
   const [extendedEphemeralPublicKey, setExtendedEphemeralPublicKey] =
     useState("");
+  const [maxEpoch, setMaxEpoch] = useState(0);
+  const [randomness, setRandomness] = useState("");
+  const [activeStep, setActiveStep] = useState(0);
+  const [fetchingZKProof, setFetchingZKProof] = useState(false);
+  const [executingTxn, setExecutingTxn] = useState(false);
+  const [executeDigest, setExecuteDigest] = useState("");
+  const [lang, setLang] = useState<"zh" | "en">("en");
+
+  // Change lng
+  useEffect(() => {
+    i18n.changeLanguage(lang);
+  }, [i18n, lang]);
 
   useEffect(() => {
     const res = queryString.parse(location.hash);
     setOauthParams(res);
   }, [location]);
 
+  // query jwt id_token
   useEffect(() => {
     if (oauthParams && oauthParams.id_token) {
       const decodedJwt = jwtDecode(oauthParams.id_token as string);
@@ -98,9 +104,6 @@ function App() {
       setActiveStep(2);
     }
   }, [oauthParams]);
-
-  const [maxEpoch, setMaxEpoch] = useState(0);
-  const [randomness, setRandomness] = useState("");
 
   useEffect(() => {
     const privateKey = window.sessionStorage.getItem(
@@ -130,8 +133,6 @@ function App() {
     }
   }, []);
 
-  const [activeStep, setActiveStep] = useState(0);
-
   const nextButtonDisabled = useMemo(() => {
     switch (activeStep) {
       case 0:
@@ -158,18 +159,7 @@ function App() {
     userSalt,
   ]);
 
-  const [fetchingZKProof, setFetchingZKProof] = useState(false);
-
-  const [executingTxn, setExecutingTxn] = useState(false);
-
-  const [executeDigest, setExecuteDigest] = useState("");
-
-  const [lang, setLang] = useState<"zh" | "en">("en");
-
-  useEffect(() => {
-    i18n.changeLanguage(lang);
-  }, [i18n, lang]);
-
+  // query zkLogin address balance
   const { data: addressBalance } = useSuiClientQuery(
     "getBalance",
     {
@@ -182,13 +172,7 @@ function App() {
   );
 
   return (
-    <Box
-      sx={
-        {
-          // width: "calc(100vw - 4rem)",
-        }
-      }
-    >
+    <Box>
       <Box
         sx={{
           mb: "36px",
@@ -240,20 +224,10 @@ function App() {
           overflowX: "hidden",
         }}
       >
-        <Stepper
-          activeStep={activeStep}
-          sx={
-            {
-              // minWidth: "2400px",
-            }
-          }
-        >
-          {STEPS.map((stepLabel, index) => (
+        <Stepper activeStep={activeStep}>
+          {STEPS_LABELS_TRANS_KEY.map((stepLabel, index) => (
             <Step key={index}>
               <StepLabel>{t(stepLabel)}</StepLabel>
-              {/* <StepContent TransitionProps={{ unmountOnExit: false }}>
-                {STEPS_DESC[index]}
-              </StepContent> */}
             </Step>
           ))}
         </Stepper>
@@ -319,6 +293,7 @@ function App() {
         }}
         className="border border-slate-300 rounded-xl"
       >
+        {/* Step 1 */}
         {activeStep === 0 && (
           <Stack spacing={2}>
             <Typography
@@ -328,14 +303,15 @@ function App() {
                 mb: "12px !important",
               }}
             >
-              {t("第一步：生成临时秘钥对（ephemeralKeyPair）")}
+              {t("431375b3")}
             </Typography>
             <Typography>
-              <Trans i18nKey={"step1-desc"}>
-                临时秘钥对用来对<code>transactionBlock</code>进行签名
+              <Trans i18nKey={"62a0a307"}>
+                The ephemeral key pair is used to sign the
+                <code>transactionBlock</code>
               </Trans>
             </Typography>
-            <Typography>{t("储存在浏览器会话中")} (Session Storage)</Typography>
+            <Typography>{t("9ec629a8")} (Session Storage)</Typography>
             <Stack direction="row" spacing={2}>
               <Button
                 variant="contained"
@@ -377,6 +353,7 @@ ${JSON.stringify(ephemeralKeyPair?.getPublicKey().toBase64())}`}
             </Typography>
           </Stack>
         )}
+        {/* Step 2 */}
         {activeStep === 1 && (
           <Stack spacing={2}>
             <Typography
@@ -386,25 +363,25 @@ ${JSON.stringify(ephemeralKeyPair?.getPublicKey().toBase64())}`}
                 mb: "12px !important",
               }}
             >
-              {t("第二步：获取JWT")} (from OpenID Provider)
+              {t("4f04f1f8")} (from OpenID Provider)
             </Typography>
-            <Typography>{t("所需参数：")}</Typography>
+            <Typography>{t("56adebff")}</Typography>
             <Stack spacing={1}>
               <Typography>
                 1. {"  "}
-                <code>$CLIENT_ID</code> {t("（申请 OpenID Service 服务获得）")}
+                <code>$CLIENT_ID</code> {t("e062b220")}
               </Typography>
               <Typography>
                 2. <code>$REDIRECT_URL</code>
-                {t("（App Url, 在 OpenID Service 配置）")}
+                {t("ab92f814")}
               </Typography>
               <Typography>
                 3. <code>$NONCE</code>
                 {"  "}
-                <Trans i18nKey={"step2-NONCE"}>
-                  （通过<code>ephemeralKeyPair</code>
+                <Trans i18nKey={"2397bcd8"}>
+                  （Generated through<code>ephemeralKeyPair</code>
                   <code>maxEpoch</code>
-                  <code>randomness</code> 生成）
+                  <code>randomness</code>）
                 </Trans>
               </Typography>
               <Stack
@@ -414,13 +391,13 @@ ${JSON.stringify(ephemeralKeyPair?.getPublicKey().toBase64())}`}
                 }}
               >
                 <Typography>
-                  <code>*ephemeralKeyPair</code>: {t("上一步生成的临时秘钥对")}
+                  <code>*ephemeralKeyPair</code>: {t("4274e146")}
                 </Typography>
                 <Typography>
-                  <code>*maxEpoch</code>: {t("临时秘钥对的有效期")}
+                  <code>*maxEpoch</code>: {t("bf54d75b")}
                 </Typography>
                 <Typography>
-                  <code>*randomness</code>: {t("随机种子")}
+                  <code>*randomness</code>: {t("4a7add7c")}
                 </Typography>
               </Stack>
             </Stack>
@@ -444,15 +421,15 @@ ${JSON.stringify(ephemeralKeyPair?.getPublicKey().toBase64())}`}
                   setMaxEpoch(Number(epoch) + 10);
                 }}
               >
-                {t("获取当前Epoch (通过Sui Client)")}
+                {t("3a96f638")}
               </Button>
               {currentEpoch && (
                 <Box sx={{ ml: "12px" }}>
-                  {t("当前Epoch:")} <code>{currentEpoch}</code>
+                  {t("6d47d563")} <code>{currentEpoch}</code>
                 </Box>
               )}
               <Typography sx={{ ml: "24px" }}>
-                {t("假设设置有效期为10个 Epoch，则：")}
+                {t("6a747813")}
                 <code>maxEpoch:{maxEpoch}</code>
               </Typography>
             </Box>
@@ -483,7 +460,7 @@ const randomness = generateRandomness();`}
                   setRandomness(randomness);
                 }}
               >
-                {t("生成随机种子")}
+                {t("2e2913c8")}
               </Button>
               <Typography>
                 <code>randomness: {randomness}</code>
@@ -554,6 +531,7 @@ const randomness = generateRandomness();`}
             </Box>
           </Stack>
         )}
+        {/* Step 3 */}
         {activeStep === 2 && (
           <Box>
             <Typography
@@ -563,7 +541,7 @@ const randomness = generateRandomness();`}
                 mb: "12px !important",
               }}
             >
-              {t("第三步：Decode JWT (后续组装 zkLogin 签名时需要用到)")}
+              {t("ef410d70")}
             </Typography>
             {decodedJwt && (
               <Alert variant="standard" color="success">
@@ -596,33 +574,33 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
               }}
             >
               <Typography>
-                <code>iss (issuer)</code>：<b>{t("签发人")}</b>
+                <code>iss (issuer)</code>：<b>{t("c20d7af6")}</b>
               </Typography>
               <Typography>
-                <code>aud (audience)</code>：<b>{t("使用者 (CLIENT_ID)")}</b>
+                <code>aud (audience)</code>：<b>{t("e9286432")}</b>
               </Typography>
               <Typography>
-                <code>sub (subject)</code>：
-                <b>{t("主体 （用户标识符，每个用户都不一样）")}</b>
+                <code>sub (subject)</code>：<b>{t("0ac23a36")}</b>
               </Typography>
               <Typography>
-                <code>nonce</code>：{t("签名顺序（前面组装URL参数生成的值）")}
+                <code>nonce</code>：{t("20547967")}
               </Typography>
               <Typography>
-                <code>nbf (Not Before)</code>：{t("生效时间")}
+                <code>nbf (Not Before)</code>：{t("060c9525")}
               </Typography>
               <Typography>
-                <code>iat(Issued At)</code>：{t("签发时间")}
+                <code>iat(Issued At)</code>：{t("5bbacff6")}
               </Typography>
               <Typography>
-                <code>exp (expiration time)</code>：{t("过期时间")}
+                <code>exp (expiration time)</code>：{t("3caf36d5")}
               </Typography>
               <Typography>
-                <code>jti (JWT ID)</code>：{t("JWT编号")}
+                <code>jti (JWT ID)</code>：{t("64ab7f15")}
               </Typography>
             </Stack>
           </Box>
         )}
+        {/* Step 4 */}
         {activeStep === 3 && (
           <Stack spacing={2}>
             <Typography
@@ -632,19 +610,11 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
                 mb: "12px !important",
               }}
             >
-              {t("第四步：生成用户的 Salt")}
+              {t("b7c54098")}
             </Typography>
-            <Typography>
-              {t(
-                "用户 Salt 用于消除 OAuth 标识符 （sub） 与链上 Sui 地址的一一对应关系，以避免将 Web2 凭证与 Web3 凭证链接。"
-              )}
-            </Typography>
-            <Alert severity="warning">
-              {t(
-                "因此必须保管好 Salt，丢失后用户则无法找回当前 Salt 生成的地址。"
-              )}
-            </Alert>
-            <Trans i18nKey={"step4-keep-salt"}>
+            <Typography>{t("ec71ef53")}</Typography>
+            <Alert severity="warning">{t("cb63dedd")}</Alert>
+            <Trans i18nKey={"c4a666f0"}>
               <Typography>保存在哪：</Typography>
               <Typography>1.要求用户记住(发送到用户邮箱)</Typography>
               <Typography>2.储存在客户端(浏览器)</Typography>
@@ -691,6 +661,7 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
             </Typography>
           </Stack>
         )}
+        {/* Step 5 */}
         {activeStep === 4 && (
           <Stack spacing={2}>
             <Typography
@@ -700,10 +671,10 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
                 mb: "12px !important",
               }}
             >
-              {t("第五步：获取用户的 Sui 地址")}
+              {t("2fb333f5")}
             </Typography>
             <Typography>
-              <Trans i18nKey="step5-desc">
+              <Trans i18nKey="e05797f4">
                 用户 Sui 地址由 <code>sub</code> 、 <code>iss</code> 、
                 <code>aud</code> 和 <code>user_salt</code> 共同决定，对于同一个
                 JWT，每次登陆时 <code>sub</code> 、 <code>iss</code> 、
@@ -729,7 +700,7 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
                   setZkLoginUserAddress(zkLoginUserAddress);
                 }}
               >
-                {t("生成地址")}
+                {t("c9bbf457")}
               </Button>
             </Box>
             <Typography>
@@ -750,6 +721,7 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
             </Typography>
           </Stack>
         )}
+        {/* Step 6 */}
         {activeStep === 5 && (
           <Stack spacing={2}>
             <Typography
@@ -759,14 +731,10 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
                 mb: "12px !important",
               }}
             >
-              {t("第六步：获取ZK Proof (Groth16)")}
+              {t("51e8ceeb")}
             </Typography>
-            <Typography>
-              {t("这是对临时密钥对的证明（证明），用于证明临时密钥对有效。")}
-            </Typography>
-            <Typography>
-              {t("1.首先，生成扩展的临时公钥，用作 ZKP 的输入。")}
-            </Typography>
+            <Typography>{t("446760ac")}</Typography>
+            <Typography>{t("c5c9e603")}</Typography>
             <SyntaxHighlighter
               wrapLongLines
               language="typescript"
@@ -791,7 +759,7 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
                   setExtendedEphemeralPublicKey(extendedEphemeralPublicKey);
                 }}
               >
-                {t("生成扩展的临时公钥")}
+                {t("71c429d2")}
               </Button>
               <Typography
                 sx={{
@@ -804,7 +772,7 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
                 )}
               </Typography>
             </Box>
-            <Typography>{t(`step-6-desc`)}</Typography>
+            <Typography>{t(`16ebd660`)}</Typography>
             <SyntaxHighlighter
               wrapLongLines
               language="typescript"
@@ -826,7 +794,7 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
                 try {
                   setFetchingZKProof(true);
                   const zkProofResult = await axios.post(
-                    "https://prover-dev.mystenlabs.com/v1",
+                    SUI_PROVER_DEV_ENDPOINT,
                     {
                       jwt: oauthParams?.id_token as string,
                       extendedEphemeralPublicKey: extendedEphemeralPublicKey,
@@ -844,10 +812,7 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
                   setZkProof(zkProofResult.data as PartialZkLoginSignature);
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } catch (error: any) {
-                  console.log(
-                    "🚀 ~ file: App.tsx:765 ~ onClick={ ~ error:",
-                    error.response
-                  );
+                  console.error(error);
                   enqueueSnackbar(
                     String(error?.response?.data?.message || error),
                     {
@@ -859,7 +824,7 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
                 }
               }}
             >
-              {t("获取ZK Proof")}
+              {t("33893c96")}
             </LoadingButton>
             {zkProof && (
               <SyntaxHighlighter
@@ -872,6 +837,7 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
             )}
           </Stack>
         )}
+        {/* Step 7 */}
         {activeStep === 6 && (
           <Box>
             <Typography
@@ -881,18 +847,11 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
                 mb: "12px !important",
               }}
             >
-              {t("第七步：组装 zkLogin 签名并提交交易")}
+              {t("acf1b947")}
             </Typography>
-            <Alert severity="warning">
-              {t(
-                "执行交易前，请给 zkLogin 充值少量的 SUI 作为发起交易的 gas fee"
-              )}
-            </Alert>
+            <Alert severity="warning">{t("d58c9e1e")}</Alert>
             <Typography sx={{ mt: "12px" }}>
-              {t(
-                "每个 ZK 证明都与一个临时密钥对相关联。储存在适当位置，可以重复作为证明用来签署任意数量的交易，直到临时密钥对过期"
-              )}
-              （<code>maxEpoch</code>）
+              {t("6591b962")}（<code>maxEpoch</code>）
             </Typography>
             <SyntaxHighlighter
               wrapLongLines
@@ -930,10 +889,6 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
                       client: suiClient,
                       signer: ephemeralKeyPair, // This must be the same ephemeral key pair used in the ZKP request
                     });
-                    console.log(
-                      "🚀 ~ file: App.tsx:126 ~ onClick={ ~ userSignature:",
-                      userSignature
-                    );
                     if (!decodedJwt?.sub || !decodedJwt.aud) {
                       return;
                     }
@@ -968,10 +923,7 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
                     );
                     setExecuteDigest(executeRes.digest);
                   } catch (error) {
-                    console.log(
-                      "🚀 ~ file: App.tsx:871 ~ onClick={ ~ error:",
-                      error
-                    );
+                    console.error(error);
                     enqueueSnackbar(String(error), {
                       variant: "error",
                     });

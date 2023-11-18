@@ -5,6 +5,8 @@ export const CLIENT_ID =
 
 export const REDIRECT_URI = "https://sui-zklogin.vercel.app/";
 
+export const SUI_PROVER_DEV_ENDPOINT = 'https://prover-dev.mystenlabs.com/v1'
+
 export const KEY_PAIR_SESSION_STORAGE_KEY = "demo_ephemeral_key_pair";
 
 export const USER_SALT_LOCAL_STORAGE_KEY = "demo_user_salt_key_pair";
@@ -14,7 +16,7 @@ export const RANDOMNESS_SESSION_STORAGE_KEY = "demo_randomness_key_pair";
 export const MAX_EPOCH_LOCAL_STORAGE_KEY = "demo_max_epoch_key_pair";
 
 
-export const STEPS = ['生成临时秘钥对', '获取JWT', 'Decode JWT', '生成用户的 Salt', '获取用户的 Sui 地址', '获取 ZK Proof', '组装 zkLogin 签名',]
+export const STEPS_LABELS_TRANS_KEY = ['16e758e8', '9b8b5398', '8adf5b45', '8b72e7cd', '66f6b490', 'af802c7a', 'c649dd70',]
 
 
-export const STEPS_DESC = ['ephemeralKeyPair', '来自 OpenID Provider', '后续组装zkLogin签名时需要用到', '用户地址由 JWT 和 Salt 共同决定', '交易签名需要 ZK Proof', '提交交易']
+export const STEPS_DESC = ['ephemeralKeyPair', '47b83f4e', 'fb399be8', '0a710e64', '32255d31', '8f2433d9']
