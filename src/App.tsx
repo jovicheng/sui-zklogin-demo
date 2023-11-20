@@ -218,6 +218,16 @@ function App() {
           </a>
         </Typography>
       </Box>
+      <Alert
+        severity="error"
+        sx={{
+          mb: "36px",
+          fontWeight: 600,
+        }}
+      >
+        Sui Devnet node is currently unavailable, and the demo process may not
+        be completed.
+      </Alert>
       <Box
         sx={{
           width: "100%",
