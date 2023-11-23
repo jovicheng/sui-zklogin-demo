@@ -53,6 +53,7 @@ import {
   SUI_PROVER_DEV_ENDPOINT,
   USER_SALT_LOCAL_STORAGE_KEY,
 } from "./constant";
+import { base, gray } from "./theme/colors";
 
 export type PartialZkLoginSignature = Omit<
   Parameters<typeof getZkLoginSignature>["0"]["inputs"],
@@ -211,6 +212,18 @@ function App() {
               中文
             </Button>
           </ButtonGroup>
+          <Typography
+            sx={{
+              color: base.white,
+              background: gray[900],
+              p: "4px 8px",
+              fontWeight: 400,
+              fontSize: "0.75rem",
+              borderRadius: "4px",
+            }}
+          >
+            Devnet
+          </Typography>
         </Typography>
         <Typography>
           <a href="https://github.com/jovicheng" target="_blank">
