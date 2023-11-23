@@ -225,11 +225,21 @@ function App() {
             Devnet
           </Typography>
         </Typography>
-        <Typography>
-          <a href="https://github.com/jovicheng" target="_blank">
-            @ Jovi
-          </a>
-        </Typography>
+        <Stack direction="row" alignItems="center" spacing={4}>
+          <Typography>
+            <a
+              href="https://github.com/jovicheng/sui-zklogin-demo"
+              target="_blank"
+            >
+              @ Github Repo
+            </a>
+          </Typography>
+          <Typography>
+            <a href="https://github.com/jovicheng" target="_blank">
+              @ Jovi
+            </a>
+          </Typography>
+        </Stack>
       </Box>
       {/* <Alert
         severity="error"
