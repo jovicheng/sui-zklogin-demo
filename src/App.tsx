@@ -341,7 +341,7 @@ function App() {
             <Typography>
               <Trans i18nKey={"62a0a307"}>
                 The ephemeral key pair is used to sign the
-                <code>transactionBlock</code>
+                <code>TransactionBlock</code>
               </Trans>
             </Typography>
             <Typography>{t("9ec629a8")} (Session Storage)</Typography>
@@ -405,8 +405,7 @@ ${JSON.stringify(ephemeralKeyPair?.getPublicKey().toBase64())}`}
                 <code>$CLIENT_ID</code> {t("e062b220")}
               </Typography>
               <Typography>
-                2. <code>$REDIRECT_URL</code>
-                {t("ab92f814")}
+                2. <code>$REDIRECT_URL</code> {t("ab92f814")}
               </Typography>
               <Typography>
                 3. <code>$NONCE</code>
@@ -437,7 +436,8 @@ ${JSON.stringify(ephemeralKeyPair?.getPublicKey().toBase64())}`}
             <Box
               sx={{
                 display: "flex",
-                alignItems: "center",
+                alignItems: "flex-start",
+                flexDirection: "column",
               }}
             >
               <Button
@@ -457,13 +457,12 @@ ${JSON.stringify(ephemeralKeyPair?.getPublicKey().toBase64())}`}
                 {t("3a96f638")}
               </Button>
               {currentEpoch && (
-                <Box sx={{ ml: "12px" }}>
+                <Box sx={{ mt: "6px" }}>
                   {t("6d47d563")} <code>{currentEpoch}</code>
                 </Box>
               )}
-              <Typography sx={{ ml: "24px" }}>
-                {t("6a747813")}
-                <code>maxEpoch:{maxEpoch}</code>
+              <Typography sx={{ mt: "6px" }}>
+                {t("6a747813")} <code>maxEpoch:{maxEpoch}</code>
               </Typography>
             </Box>
             <Box
@@ -511,7 +510,10 @@ const randomness = generateRandomness();`}
                 <Button
                   variant="contained"
                   disabled={
-                    !ephemeralKeyPair || maxEpoch === undefined || !randomness
+                    !ephemeralKeyPair ||
+                    !maxEpoch ||
+                    !currentEpoch ||
+                    !randomness
                   }
                   onClick={() => {
                     if (!ephemeralKeyPair) {
@@ -577,7 +579,13 @@ const randomness = generateRandomness();`}
               {t("ef410d70")}
             </Typography>
             {decodedJwt && (
-              <Alert variant="standard" color="success">
+              <Alert
+                variant="standard"
+                color="success"
+                sx={{
+                  fontWeight: 600,
+                }}
+              >
                 Successfully logged in via Google!
               </Alert>
             )}
@@ -646,7 +654,14 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
               {t("b7c54098")}
             </Typography>
             <Typography>{t("ec71ef53")}</Typography>
-            <Alert severity="warning">{t("cb63dedd")}</Alert>
+            <Alert
+              severity="warning"
+              sx={{
+                fontWeight: 600,
+              }}
+            >
+              {t("cb63dedd")}
+            </Alert>
             <Trans i18nKey={"c4a666f0"}>
               <Typography>保存在哪：</Typography>
               <Typography>1.要求用户记住(发送到用户邮箱)</Typography>
@@ -724,7 +739,9 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
             <Box>
               <Button
                 variant="contained"
-                disabled={!userSalt || !jwtString}
+                disabled={
+                  !userSalt || !jwtString || Boolean(zkLoginUserAddress)
+                }
                 onClick={() => {
                   if (!userSalt) {
                     return;
@@ -752,6 +769,21 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
                 </code>
               )}
             </Typography>
+            {zkLoginUserAddress && (
+              <Alert severity="success">
+                Congratulations! At this stage, your zkLogin Sui address has
+                been successfully generated.
+                <br />
+                You can use the <b>devnet faucet</b>{" "}
+                <a
+                  href="https://discord.com/channels/916379725201563759/971488439931392130"
+                  target="_blank"
+                >
+                  (#Sui official discord)
+                </a>{" "}
+                to claim test Sui Token in order to proceed to the next step.
+              </Alert>
+            )}
           </Stack>
         )}
         {/* Step 6 */}
