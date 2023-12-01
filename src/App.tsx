@@ -930,9 +930,7 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
               {t("acf1b947")}
             </Typography>
             <Alert severity="warning">{t("d58c9e1e")}</Alert>
-            <Typography sx={{ mt: "12px" }}>
-              {t("6591b962")}（<code>maxEpoch</code>）
-            </Typography>
+            <Typography sx={{ mt: "12px" }}>{t("6591b962")}</Typography>
             <SyntaxHighlighter
               wrapLongLines
               language="typescript"
