@@ -102,7 +102,7 @@ function App() {
       const decodedJwt = jwtDecode(oauthParams.id_token as string);
       setJwtString(oauthParams.id_token as string);
       setDecodedJwt(decodedJwt);
-      // setActiveStep(2);
+      setActiveStep(2);
     }
   }, [oauthParams]);
 
