@@ -59,9 +59,11 @@ export const AXIOS_ZKPROOF = `const zkProofResult = await axios.post(
 const partialZkLoginSignature = zkProofResult as PartialZkLoginSignature
 `
 
-export const GENERATE_NONCE = `// Generate Nonce for acquiring JWT:
-const nonce = generateNonce(
-  ephemeralKeyPair.getPublicKey(),
-  maxEpoch,
-  randomness
-);`
+export const GENERATE_NONCE = `import { generateNonce } from "@mysten/zklogin";
+
+ // Generate Nonce for acquiring JWT:
+ const nonce = generateNonce(
+   ephemeralKeyPair.getPublicKey(),
+   maxEpoch,
+   randomness
+ );`

@@ -29,7 +29,7 @@ export const resources = {
       '3a96f638': 'Fetch current Epoch (via Sui Client)',
       '6d47d563': 'Current Epoch:',
       '6a747813': 'Assuming the validity period is set to 10 Epochs, then:',
-      '2e2913c8': 'Generate random seed',
+      '2e2913c8': 'Generate randomness',
       ef410d70: 'Step 3: Decode JWT (needed for assembling zkLogin signature later)',
       c20d7af6: 'Issuer',
       e9286432: 'JWT Consumer (CLIENT_ID)',

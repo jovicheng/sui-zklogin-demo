@@ -102,7 +102,7 @@ function App() {
       const decodedJwt = jwtDecode(oauthParams.id_token as string);
       setJwtString(oauthParams.id_token as string);
       setDecodedJwt(decodedJwt);
-      setActiveStep(2);
+      // setActiveStep(2);
     }
   }, [oauthParams]);
 
@@ -138,6 +138,8 @@ function App() {
     switch (activeStep) {
       case 0:
         return !ephemeralKeyPair;
+      case 1:
+        return !currentEpoch || !randomness;
       case 2:
         return !jwtString;
       case 3:
@@ -152,6 +154,8 @@ function App() {
         break;
     }
   }, [
+    currentEpoch,
+    randomness,
     activeStep,
     jwtString,
     ephemeralKeyPair,
@@ -475,8 +479,10 @@ ${JSON.stringify(ephemeralKeyPair?.getPublicKey().toBase64())}`}
                 language="typescript"
                 style={oneDark}
               >
-                {`// randomness
-const randomness = generateRandomness();`}
+                {`import { generateRandomness } from '@mysten/zklogin';
+                
+ // randomness
+ const randomness = generateRandomness();`}
               </SyntaxHighlighter>
             </Box>
             <Stack direction="row" spacing={1} alignItems="center">
@@ -600,6 +606,8 @@ const randomness = generateRandomness();`}
             >
               {`// id_token Header.Payload.Signature
 ${JSON.stringify(jwtString)}
+
+import { JwtPayload, jwtDecode } from "jwt-decode";
 
 const jwtPayload = jwtDecode(id_token);
 const decodedJwt = jwt_decode(jwtPayload) as JwtPayload;`}
@@ -734,7 +742,9 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
               language="typescript"
               style={oneDark}
             >
-              {`const zkLoginUserAddress = jwtToAddress(jwt, userSalt);`}
+              {`import { jwtToAddress } from "@mysten/zklogin";
+
+ const zkLoginUserAddress = jwtToAddress(jwt, userSalt);`}
             </SyntaxHighlighter>
             <Box>
               <Button
@@ -754,7 +764,7 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
               </Button>
             </Box>
             <Typography>
-              User Sui Address:
+              User Sui Address:{" "}
               {zkLoginUserAddress && (
                 <code>
                   <Typography
@@ -771,7 +781,7 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
             </Typography>
             {zkLoginUserAddress && (
               <Alert severity="success">
-                Congratulations! At this stage, your zkLogin Sui address has
+                Congratulations! At this stage, your Sui zkLogin address has
                 been successfully generated.
                 <br />
                 You can use the <b>devnet faucet</b>{" "}
@@ -805,9 +815,11 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
               language="typescript"
               style={oneDark}
             >
-              {`const extendedEphemeralPublicKey = getExtendedEphemeralPublicKey(
-  ephemeralKeyPair.getPublicKey()
-);`}
+              {`import { getExtendedEphemeralPublicKey } from "@mysten/zklogin";
+              
+ const extendedEphemeralPublicKey = getExtendedEphemeralPublicKey(
+   ephemeralKeyPair.getPublicKey()
+ );`}
             </SyntaxHighlighter>
             <Box>
               <Button
@@ -875,6 +887,9 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
                     }
                   );
                   setZkProof(zkProofResult.data as PartialZkLoginSignature);
+                  enqueueSnackbar("Successfully obtain ZK Proof", {
+                    variant: "success",
+                  });
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } catch (error: any) {
                   console.error(error);
