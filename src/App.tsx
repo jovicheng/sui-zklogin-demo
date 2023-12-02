@@ -4,6 +4,11 @@ import {
   Box,
   Button,
   ButtonGroup,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Stack,
   Step,
   StepLabel,
@@ -32,7 +37,7 @@ import { enqueueSnackbar } from "notistack";
 import queryString from "query-string";
 import { useEffect, useMemo, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import "./App.css";
@@ -50,6 +55,7 @@ import {
   RANDOMNESS_SESSION_STORAGE_KEY,
   REDIRECT_URI,
   STEPS_LABELS_TRANS_KEY,
+  SUI_DEVNET_FAUCET,
   SUI_PROVER_DEV_ENDPOINT,
   USER_SALT_LOCAL_STORAGE_KEY,
 } from "./constant";
@@ -64,12 +70,11 @@ const suiClient = new SuiClient({ url: FULLNODE_URL });
 
 function App() {
   const { t, i18n } = useTranslation();
-
+  const [showResetDialog, setShowResetDialog] = useState(false);
   const [currentEpoch, setCurrentEpoch] = useState("");
   const [nonce, setNonce] = useState("");
   const [oauthParams, setOauthParams] =
     useState<queryString.ParsedQuery<string>>();
-  const location = useLocation();
   const [zkLoginUserAddress, setZkLoginUserAddress] = useState("");
   const [decodedJwt, setDecodedJwt] = useState<JwtPayload>();
   const [jwtString, setJwtString] = useState("");
@@ -85,6 +90,9 @@ function App() {
   const [executingTxn, setExecutingTxn] = useState(false);
   const [executeDigest, setExecuteDigest] = useState("");
   const [lang, setLang] = useState<"zh" | "en">("en");
+
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Change lng
   useEffect(() => {
@@ -102,7 +110,7 @@ function App() {
       const decodedJwt = jwtDecode(oauthParams.id_token as string);
       setJwtString(oauthParams.id_token as string);
       setDecodedJwt(decodedJwt);
-      setActiveStep(2);
+      // setActiveStep(2);
     }
   }, [oauthParams]);
 
@@ -176,6 +184,68 @@ function App() {
     }
   );
 
+  const resetState = () => {
+    setCurrentEpoch("");
+    setNonce("");
+    setOauthParams(undefined);
+    setZkLoginUserAddress("");
+    setDecodedJwt(undefined);
+    setJwtString("");
+    setEphemeralKeyPair(undefined);
+    setUserSalt(undefined);
+    setZkProof(undefined);
+    setExtendedEphemeralPublicKey("");
+    setMaxEpoch(0);
+    setRandomness("");
+    setActiveStep(0);
+    setFetchingZKProof(false);
+    setExecutingTxn(false);
+    setExecuteDigest("");
+  };
+
+  const resetLocalState = () => {
+    try {
+      window.sessionStorage.clear();
+      window.localStorage.clear();
+      resetState();
+      setShowResetDialog(false);
+      navigate(`/`);
+      setActiveStep(0);
+      enqueueSnackbar("Reset successful", {
+        variant: "success",
+      });
+    } catch (error) {
+      enqueueSnackbar(String(error), {
+        variant: "error",
+      });
+    }
+  };
+
+  const [requestingFaucet, setRequestingFaucet] = useState(false);
+
+  const requestFaucet = async () => {
+    if (!zkLoginUserAddress) {
+      return;
+    }
+    try {
+      setRequestingFaucet(true);
+      await axios.post(SUI_DEVNET_FAUCET, {
+        FixedAmountRequest: {
+          recipient: zkLoginUserAddress,
+        },
+      });
+      enqueueSnackbar("Success!", {
+        variant: "success",
+      });
+    } catch (error) {
+      enqueueSnackbar(String(error), {
+        variant: "error",
+      });
+    } finally {
+      setRequestingFaucet(false);
+    }
+  };
+
   return (
     <Box>
       <Box
@@ -183,52 +253,108 @@ function App() {
           mb: "36px",
         }}
       >
-        <Typography
-          sx={{
-            fontSize: "2rem",
-            fontWeight: 600,
-            display: "flex",
-            alignItems: "center",
-            columnGap: "16px",
-          }}
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
         >
-          Sui zkLogin Demo{" "}
-          <ButtonGroup
-            variant="outlined"
-            aria-label="Disabled elevation buttons"
-          >
-            <Button
-              size="small"
-              variant={lang === "en" ? "contained" : "outlined"}
-              onClick={() => {
-                setLang("en");
-              }}
-            >
-              ENG
-            </Button>
-            <Button
-              size="small"
-              variant={lang === "zh" ? "contained" : "outlined"}
-              onClick={() => {
-                setLang("zh");
-              }}
-            >
-              中文
-            </Button>
-          </ButtonGroup>
           <Typography
             sx={{
-              color: base.white,
-              background: gray[900],
-              p: "4px 8px",
-              fontWeight: 400,
-              fontSize: "0.75rem",
-              borderRadius: "4px",
+              fontSize: "2rem",
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              columnGap: "16px",
             }}
           >
-            Devnet
+            Sui zkLogin Demo{" "}
+            <ButtonGroup
+              variant="outlined"
+              aria-label="Disabled elevation buttons"
+            >
+              <Button
+                size="small"
+                variant={lang === "en" ? "contained" : "outlined"}
+                onClick={() => {
+                  setLang("en");
+                }}
+              >
+                ENG
+              </Button>
+              <Button
+                size="small"
+                variant={lang === "zh" ? "contained" : "outlined"}
+                onClick={() => {
+                  setLang("zh");
+                }}
+              >
+                中文
+              </Button>
+            </ButtonGroup>
+            <Typography
+              sx={{
+                color: base.white,
+                background: gray[900],
+                p: "4px 8px",
+                fontWeight: 400,
+                fontSize: "0.75rem",
+                borderRadius: "4px",
+              }}
+            >
+              Devnet
+            </Typography>
           </Typography>
-        </Typography>
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => {
+              setShowResetDialog(true);
+            }}
+          >
+            Reset LocalState
+          </Button>
+          <Dialog
+            open={showResetDialog}
+            onClose={() => {
+              setShowResetDialog(false);
+            }}
+          >
+            <DialogTitle>
+              Please confirm if you want to reset the local state?
+            </DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Resetting the local state{" "}
+                <span
+                  style={{
+                    fontWeight: 600,
+                  }}
+                >
+                  will clear the Salt value
+                </span>{" "}
+                stored in local storage, rendering previously generated
+                addresses irretrievable.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button
+                onClick={() => {
+                  setShowResetDialog(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  resetLocalState();
+                }}
+              >
+                Confirm
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </Stack>
         <Stack direction="row" alignItems="center" spacing={4}>
           <Typography>
             <a
@@ -245,6 +371,7 @@ function App() {
           </Typography>
         </Stack>
       </Box>
+      {/* devnet unavailable Alert   */}
       {/* <Alert
         severity="error"
         sx={{
@@ -460,11 +587,12 @@ ${JSON.stringify(ephemeralKeyPair?.getPublicKey().toBase64())}`}
               >
                 {t("3a96f638")}
               </Button>
-              {currentEpoch && (
-                <Box sx={{ mt: "6px" }}>
-                  {t("6d47d563")} <code>{currentEpoch}</code>
-                </Box>
-              )}
+              <Box sx={{ mt: "6px" }}>
+                {t("6d47d563")}{" "}
+                <code>
+                  {currentEpoch || "Click the button above to obtain"}
+                </code>
+              </Box>
               <Typography sx={{ mt: "6px" }}>
                 {t("6a747813")} <code>maxEpoch:{maxEpoch}</code>
               </Typography>
@@ -763,7 +891,12 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
                 {t("c9bbf457")}
               </Button>
             </Box>
-            <Typography>
+            <Typography
+              sx={{
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
               User Sui Address:{" "}
               {zkLoginUserAddress && (
                 <code>
@@ -778,13 +911,29 @@ ${JSON.stringify(decodedJwt, null, 2)}`}
                   </Typography>
                 </code>
               )}
+              <LoadingButton
+                variant="contained"
+                sx={{
+                  ml: "24px",
+                }}
+                size="small"
+                loading={requestingFaucet}
+                disabled={!zkLoginUserAddress}
+                onClick={requestFaucet}
+              >
+                Request Test SUI Token
+              </LoadingButton>
             </Typography>
             {zkLoginUserAddress && (
               <Alert severity="success">
                 Congratulations! At this stage, your Sui zkLogin address has
                 been successfully generated.
                 <br />
-                You can use the <b>devnet faucet</b>{" "}
+                You can click the button on the right of the address to claim a
+                test SUI Coin.
+                <br />
+                If there's an error with the service, you can use the{" "}
+                <b>devnet faucet</b>{" "}
                 <a
                   href="https://discord.com/channels/916379725201563759/971488439931392130"
                   target="_blank"
