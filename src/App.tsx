@@ -60,6 +60,7 @@ import {
   USER_SALT_LOCAL_STORAGE_KEY,
 } from "./constant";
 import { base, gray } from "./theme/colors";
+import MsafeLogo from "./assets/msafe.png";
 
 export type PartialZkLoginSignature = Omit<
   Parameters<typeof getZkLoginSignature>["0"]["inputs"],
@@ -364,10 +365,38 @@ function App() {
               @ Github Repo
             </a>
           </Typography>
-          <Typography>
+          <Typography
+            sx={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
             <a href="https://github.com/jovicheng" target="_blank">
               @ Jovi
             </a>
+            <Typography
+              sx={{
+                ml: "4px",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              -{" "}
+              <a
+                href="https://twitter.com/MomentumSafe"
+                target="_blank"
+                style={{ display: "flex", alignItems: "center" }}
+              >
+                <img
+                  src={MsafeLogo}
+                  width={24}
+                  style={{
+                    margin: "0 4px",
+                  }}
+                />{" "}
+                MSafe
+              </a>
+            </Typography>
           </Typography>
         </Stack>
       </Box>
