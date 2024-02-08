@@ -34,11 +34,7 @@ The following table lists the storage location for key data the example uses:
 
 Because the user salt is stored long-term in the browser's `localStorage`, as long as the `localStorage` is not cleared manually, you can use the same JWT (in this example, logging in with the same Google account) to access the corresponding zkLogin address generated from the current salt value at any time.
 
-:::caution
-
 Changing browsers or devices results in the inability to access previously generated Sui zkLogin addresses, even when using the same JWT.
-
-:::
 
 ## Troubleshooting
 
