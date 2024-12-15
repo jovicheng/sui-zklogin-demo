@@ -47,4 +47,4 @@ Changing browsers or devices results in the inability to access previously gener
 
 - Any suggestions are welcome on the project's GitHub repo through raised issues, and of course, pull requests are highly appreciated.
 
-- For more FAQs about zkLogin, you can check [zkLogin FAQ](../zklogin.mdx#faq).
+- For more FAQs about zkLogin, you can check [zkLogin FAQ](https://docs.sui.io/concepts/cryptography/zklogin#faq).
